@@ -34,9 +34,10 @@ import { cn } from "@/lib/utils";
 
 interface PatientWizardProps {
   isPublicKiosk?: boolean;
+  initialCategory?: "BPJS_KESEHATAN" | "UMUM";
 }
 
-export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWizardProps) {
+export function PatientRegistrationWizard({ isPublicKiosk = false, initialCategory = "UMUM" }: PatientWizardProps) {
   const router = useRouter();
   const { addPatient, hospitalSettings, addQueue } = useSIMRS();
 
@@ -68,7 +69,7 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
     phone_number: "",
 
     // Step 3: Penjamin
-    insurance_type: "BPJS_KESEHATAN" as "UMUM" | "BPJS_KESEHATAN" | "ASURANSI_SWASTA",
+    insurance_type: initialCategory as "UMUM" | "BPJS_KESEHATAN" | "ASURANSI_SWASTA",
     insurance_number: "",
 
     // Step 4: Kontak Darurat & Alergi
@@ -80,7 +81,7 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
   });
 
   // Patient Category Selection: "BPJS_KESEHATAN" vs "UMUM"
-  const [patientCategory, setPatientCategory] = useState<"BPJS_KESEHATAN" | "UMUM">("BPJS_KESEHATAN");
+  const [patientCategory, setPatientCategory] = useState<"BPJS_KESEHATAN" | "UMUM">(initialCategory);
   const [bpjsCardNumber, setBpjsCardNumber] = useState("0001892837461");
   const [bpjsLookupLoading, setBpjsLookupLoading] = useState(false);
   const [verifiedBPJS, setVerifiedBPJS] = useState<BPJSParticipant | null>(null);

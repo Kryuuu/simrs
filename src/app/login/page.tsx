@@ -203,18 +203,26 @@ export default function LoginPage() {
                 Pendaftaran Mandiri Pasien Baru
               </span>
               <span className="text-[10px] text-teal-400 font-mono bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/30">
-                Tanpa Login
+                Pilih Kategori
               </span>
             </div>
             <p className="text-[11px] text-slate-300 leading-relaxed">
-              Pasien baru dapat mendaftar mandiri untuk langsung memperoleh Nomor Rekam Medis (No. RM) resmi & Kartu Berobat Digital Rumah Sakit.
+              Pasien baru dapat mendaftar mandiri. Pilih kategori Anda (Pasien BPJS JKN atau Pasien Umum) sebelum masuk ke formulir.
             </p>
-            <Link
-              href="/register-pasien"
-              className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md shadow-teal-950/40 transition-all hover:scale-[1.01]"
-            >
-              Buka Formulir Pendaftaran Pasien (Kios Online) <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Link
+                href="/register-pasien/bpjs"
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-md shadow-emerald-950/40 transition-all text-center"
+              >
+                <span>Pasien BPJS (JKN)</span> <ArrowRight className="h-3 w-3" />
+              </Link>
+              <Link
+                href="/register-pasien/umum"
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-[11px] font-bold shadow-md shadow-teal-950/40 transition-all text-center"
+              >
+                <span>Pasien Umum</span> <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
 
           {/* Form */}
