@@ -103,22 +103,66 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Banner & Quick Action Center */}
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-slate-900 via-teal-950 to-slate-900 border border-teal-500/30 p-6 text-white shadow-xl">
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-500/30 text-[11px] text-teal-300 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Sistem Operasional SIMRS Aktif • 99.98% Uptime
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              Selamat Bertugas, {currentUser.full_name}
+            </h1>
+            <p className="text-xs text-slate-300 max-w-xl">
+              Portal komando terpadu RSUD Pratama Sehat Mandiri. Pantau sensus pasien, antrean poli, ketersediaan tempat tidur, dan validasi resep farmasi secara real-time.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/patients/register"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition-all hover:scale-[1.02]"
+            >
+              <Users className="h-4 w-4" />
+              <span>+ Pasien Baru (Page)</span>
+            </Link>
+            <Link
+              href="/registrations"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all"
+            >
+              <Calendar className="h-4 w-4 text-teal-400" />
+              <span>+ Registrasi Layanan</span>
+            </Link>
+            <Link
+              href="/emergency"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-200 text-xs font-semibold transition-all"
+            >
+              <Siren className="h-4 w-4 text-red-400" />
+              <span>Triase IGD</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Page Title & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Dashboard Operasional Rumah Sakit
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Activity className="h-5 w-5 text-teal-600" />
+            Indikator Kinerja & Sensus Pasien
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Ringkasan indikator mutu pelayanan, sensus pasien, dan alur kerja real-time.
+            Statistik kunjungan aktif, kapasitas bed rawat inap, dan antrean pelayanan hari ini.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 text-xs shadow-2xs">
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 text-xs shadow-2xs">
             <button
               onClick={() => setTimeFilter("today")}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1 rounded-lg font-medium transition-colors ${
                 timeFilter === "today" ? "bg-teal-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -126,7 +170,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setTimeFilter("week")}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1 rounded-lg font-medium transition-colors ${
                 timeFilter === "week" ? "bg-teal-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -134,20 +178,13 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setTimeFilter("month")}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1 rounded-lg font-medium transition-colors ${
                 timeFilter === "month" ? "bg-teal-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Bulan Ini
             </button>
           </div>
-
-          <Link href="/registrations">
-            <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white shadow-xs">
-              <Users className="h-3.5 w-3.5 mr-1" />
-              Pendaftaran Baru
-            </Button>
-          </Link>
         </div>
       </div>
 

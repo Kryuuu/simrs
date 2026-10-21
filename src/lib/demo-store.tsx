@@ -42,7 +42,7 @@ import {
   INITIAL_AUDIT_LOGS,
   INITIAL_NOTIFICATIONS,
 } from "./demo-data";
-import { isSupabaseConfigured } from "./supabase/client";
+import { isSupabaseConfigured, createClient } from "./supabase/client";
 
 interface DemoStoreContextType {
   isDemoMode: boolean;
@@ -196,6 +196,51 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
     recordAudit("CREATE_PATIENT", "patients", newPatient.id, `Mendaftarkan pasien baru ${newPatient.full_name} (${mrn})`);
+
+    // Async sync to Supabase if active
+    if (isSupabaseConfigured) {
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          supabase
+            .from("patients")
+            .insert({
+              mrn,
+              nik: data.nik,
+              full_name: data.full_name,
+              gender: data.gender,
+              birth_date: data.birth_date,
+              birth_place: data.birth_place,
+              blood_type: data.blood_type || "TIDAK TAHU",
+              rhesus: data.rhesus || "+",
+              marital_status: data.marital_status || "BELUM KAWIN",
+              religion: data.religion || "ISLAM",
+              education: data.education || "",
+              occupation: data.occupation || "",
+              address_street: data.address_street,
+              address_village: data.address_village || "",
+              address_district: data.address_district || "",
+              address_city: data.address_city,
+              address_province: data.address_province,
+              phone_number: data.phone_number,
+              emergency_contact_name: data.emergency_contact_name || "-",
+              emergency_contact_relation: data.emergency_contact_relation || "-",
+              emergency_contact_phone: data.emergency_contact_phone || "-",
+              allergies: data.allergies || [],
+              insurance_type: data.insurance_type,
+              insurance_number: data.insurance_number || null,
+            })
+            .then(({ error }: { error: any }) => {
+              if (error) {
+                console.warn("Supabase patient insert info:", error.message);
+              }
+            });
+        }
+      } catch (err) {
+        console.warn("Supabase sync skipped:", err);
+      }
+    }
+
     return newPatient;
   };
 

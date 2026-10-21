@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
+  UserPlus,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { canAccessModule } from "@/lib/permissions/rbac";
@@ -69,6 +70,12 @@ export function Sidebar() {
           label: "Pasien",
           href: "/patients",
           icon: Users,
+          moduleKey: "patients",
+        },
+        {
+          label: "Registrasi Pasien Baru",
+          href: "/patients/register",
+          icon: UserPlus,
           moduleKey: "patients",
         },
         {

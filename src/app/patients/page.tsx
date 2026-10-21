@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Users,
   UserPlus,
@@ -18,6 +19,8 @@ import {
   X,
   Phone,
   Shield,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { Patient } from "@/types";
@@ -143,15 +146,36 @@ export default function PatientsPage() {
           </p>
         </div>
 
-        {canCreatePatient && (
-          <Button
-            onClick={() => setAddModalOpen(true)}
-            className="bg-teal-600 hover:bg-teal-700 text-white shadow-xs self-start sm:self-auto"
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <Link
+            href="/register-pasien"
+            target="_blank"
+            className="text-xs font-semibold text-teal-700 hover:text-teal-800 bg-teal-50 border border-teal-200/80 hover:bg-teal-100/70 px-3 py-2 rounded-xl transition-all flex items-center gap-1.5"
           >
-            <UserPlus className="h-4 w-4 mr-1.5" />
-            Registrasi Pasien Baru
-          </Button>
-        )}
+            <ExternalLink className="h-3.5 w-3.5" />
+            Kios Mandiri Pasien
+          </Link>
+
+          {canCreatePatient && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setAddModalOpen(true)}
+                className="text-xs border-slate-300 text-slate-700 hover:bg-slate-100 rounded-xl"
+              >
+                Modal Ringkas
+              </Button>
+
+              <Link
+                href="/patients/register"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-md shadow-teal-700/20 transition-all hover:scale-[1.02]"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Registrasi Pasien Baru (Page Lengkap)
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

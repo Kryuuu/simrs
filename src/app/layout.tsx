@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { DemoStoreProvider } from "@/lib/demo-store";
-import { DemoBanner } from "@/components/layout/demo-banner";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
-import { PWAPrompt } from "@/components/layout/pwa-prompt";
+import { AppShell } from "@/components/layout/app-shell";
 
 export const metadata: Metadata = {
   title: "SIMRS Modern - Sistem Informasi Manajemen Rumah Sakit",
@@ -33,19 +30,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="h-full antialiased">
-      <body className="min-h-full bg-slate-50 text-slate-900 font-sans flex flex-col">
+      <body className="min-h-full bg-slate-900 font-sans antialiased text-slate-900">
         <DemoStoreProvider>
-          <DemoBanner />
-          <div className="flex-1 flex w-full">
-            <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                {children}
-              </main>
-            </div>
-          </div>
-          <PWAPrompt />
+          <AppShell>{children}</AppShell>
         </DemoStoreProvider>
       </body>
     </html>

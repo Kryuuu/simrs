@@ -12,6 +12,8 @@ import {
   Building2,
   Clock,
   LogOut,
+  UserPlus,
+  Sparkles,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/permissions/rbac";
@@ -22,10 +24,32 @@ import { Button } from "@/components/ui/button";
 
 export function Header() {
   const router = useRouter();
-  const { currentUser, switchRole, hospitalSettings, notifications, patients } = useSIMRS();
+  const { currentUser, switchRole, hospitalSettings, notifications, patients, recordAudit } = useSIMRS();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResultsOpen, setSearchResultsOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+
+  React.useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogout = () => {
+    recordAudit("LOGOUT", "auth", currentUser.id, `Pengguna ${currentUser.full_name} keluar dari SIMRS`);
+    router.push("/login");
+  };
 
   const unreadNotifs = notifications.filter((n) => !n.is_read).length;
 
@@ -108,17 +132,36 @@ export function Header() {
         </div>
 
         {/* Right Action Bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Quick Register Pasien CTA */}
+          <Link
+            href="/patients/register"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-xs shadow-teal-700/20 transition-all hover:scale-[1.02]"
+            title="Daftarkan Pasien Baru"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            <span>+ Pasien Baru</span>
+          </Link>
+
+          {/* Live Digital Clock */}
+          <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 font-mono">
+            <Clock className="h-3.5 w-3.5 text-teal-600" />
+            <span className="font-semibold text-slate-800">{currentTime || "16:55:00"}</span>
+            <span className="text-[10px] text-slate-400">WITA</span>
+          </div>
+
           {/* Hospital Unit Indicator */}
-          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-200">
+          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
             <Building2 className="h-3.5 w-3.5 text-teal-600" />
-            <span className="font-medium text-slate-800">{hospitalSettings.hospital_name}</span>
+            <span className="font-medium text-slate-800 truncate max-w-[140px]">
+              {hospitalSettings.hospital_name}
+            </span>
           </div>
 
           {/* Role Switcher Button */}
           <button
             onClick={() => setRoleModalOpen(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all hover:shadow-xs ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer transition-all hover:shadow-xs ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}
             title="Klik untuk beralih peran pengujian (Role Testing)"
           >
             <Shield className="h-3.5 w-3.5 shrink-0" />
@@ -129,7 +172,7 @@ export function Header() {
           {/* Notifications Trigger */}
           <Link
             href="/notifications"
-            className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+            className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
             title="Notifikasi Sistem"
           >
             <Bell className="h-4 w-4" />
@@ -140,17 +183,26 @@ export function Header() {
 
           {/* User Profile Mini */}
           <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
-            <div className="h-8 w-8 rounded-full bg-teal-700 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+            <div className="h-8 w-8 rounded-full bg-linear-to-br from-teal-600 to-teal-800 text-white font-bold text-xs flex items-center justify-center shadow-xs">
               {currentUser.full_name.slice(0, 2).toUpperCase()}
             </div>
             <div className="hidden md:block text-left">
-              <div className="text-xs font-semibold text-slate-900 leading-tight">
+              <div className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-[120px]">
                 {currentUser.full_name}
               </div>
               <div className="text-[10px] text-slate-500 leading-tight">
                 {currentUser.nip ? `NIP: ${currentUser.nip}` : currentUser.email}
               </div>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1 cursor-pointer"
+              title="Keluar / Logout dari SIMRS"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </header>
