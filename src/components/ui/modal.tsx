@@ -55,7 +55,7 @@ export function Modal({
       {/* Modal Dialog Content */}
       <div
         className={cn(
-          "relative z-50 w-full rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-8 max-h-[90vh] flex flex-col",
+          "relative z-50 w-full rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-8 max-h-[90vh] flex flex-col animate-scale-in",
           maxWidthClasses
         )}
       >

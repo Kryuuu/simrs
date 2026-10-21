@@ -217,23 +217,24 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
-      {mobileOpen && (
-        <div
-          onClick={closeMobile}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
-        />
-      )}
+      {/* Mobile Backdrop Overlay with smooth fade */}
+      <div
+        onClick={closeMobile}
+        className={cn(
+          "fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 md:hidden transition-all duration-300 ease-in-out pointer-events-none opacity-0",
+          mobileOpen && "pointer-events-auto opacity-100"
+        )}
+      />
 
       <aside
         className={cn(
-          "h-screen flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800 transition-all duration-300 select-none",
+          "h-screen flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800 transition-all duration-300 ease-in-out select-none",
           // Desktop positioning
-          "hidden md:flex md:sticky md:top-0 md:z-30",
+          "md:sticky md:top-0 md:z-30",
           collapsed ? "md:w-16" : "md:w-64",
           // Mobile Drawer positioning
-          mobileOpen &&
-            "flex fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] shadow-2xl animate-in slide-in-from-left duration-200"
+          "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] shadow-2xl md:shadow-none",
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         {/* Brand Header */}
