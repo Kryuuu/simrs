@@ -117,44 +117,44 @@ export default function EmergencyPage() {
       </div>
 
       {/* Triage Level Quick Census Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-red-200 bg-red-50/40 shadow-2xs">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="border-red-200 bg-red-50/50 shadow-2xs">
+          <CardContent className="p-3.5 sm:p-4">
             <div className="text-[11px] font-bold text-red-800 uppercase tracking-wider flex items-center justify-between">
               <span>P1 - Resusitasi</span>
               <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
             </div>
-            <div className="text-2xl font-black text-red-600 mt-1">{p1Count} Pasien</div>
+            <div className="text-xl sm:text-2xl font-black text-red-600 mt-1">{p1Count} Pasien</div>
             <div className="text-[10px] text-red-700 font-medium mt-0.5">Penanganan seketika tanpa tunda</div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50/40 shadow-2xs">
-          <CardContent className="p-4">
+        <Card className="border-orange-200 bg-orange-50/50 shadow-2xs">
+          <CardContent className="p-3.5 sm:p-4">
             <div className="text-[11px] font-bold text-orange-800 uppercase tracking-wider">
               P2 - Emergensi
             </div>
-            <div className="text-2xl font-black text-orange-600 mt-1">{p2Count} Pasien</div>
+            <div className="text-xl sm:text-2xl font-black text-orange-600 mt-1">{p2Count} Pasien</div>
             <div className="text-[10px] text-orange-700 font-medium mt-0.5">Respon time &lt; 10 menit</div>
           </CardContent>
         </Card>
 
-        <Card className="border-amber-200 bg-amber-50/40 shadow-2xs">
-          <CardContent className="p-4">
+        <Card className="border-amber-200 bg-amber-50/50 shadow-2xs">
+          <CardContent className="p-3.5 sm:p-4">
             <div className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
               P3 - Urgensi
             </div>
-            <div className="text-2xl font-black text-amber-600 mt-1">{p3Count} Pasien</div>
+            <div className="text-xl sm:text-2xl font-black text-amber-600 mt-1">{p3Count} Pasien</div>
             <div className="text-[10px] text-amber-700 font-medium mt-0.5">Respon time &lt; 30 menit</div>
           </CardContent>
         </Card>
 
         <Card className="border-slate-200 shadow-2xs">
-          <CardContent className="p-4">
+          <CardContent className="p-3.5 sm:p-4">
             <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               Total Pasien IGD Aktif
             </div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{activeCount} Pasien</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{activeCount} Pasien</div>
             <div className="text-[10px] text-slate-500 font-medium mt-0.5">Sedang dalam penanganan/observasi</div>
           </CardContent>
         </Card>

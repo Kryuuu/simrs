@@ -14,6 +14,7 @@ import {
   LogOut,
   UserPlus,
   Sparkles,
+  Menu,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/permissions/rbac";
@@ -21,10 +22,12 @@ import { UserRole } from "@/types";
 import { INITIAL_USERS } from "@/lib/demo-data";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "./sidebar-context";
 
 export function Header() {
   const router = useRouter();
   const { currentUser, switchRole, hospitalSettings, notifications, patients, recordAudit } = useSIMRS();
+  const { toggleMobile } = useSidebar();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResultsOpen, setSearchResultsOpen] = useState(false);
@@ -76,10 +79,19 @@ export function Header() {
 
   return (
     <>
-      <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-2xs">
-        {/* Left: Quick Patient Search */}
-        <div className="relative flex-1 max-w-md">
-          <div className="relative">
+      <header className="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3 sticky top-0 z-20 shadow-2xs">
+        {/* Left: Mobile Menu Toggle & Quick Patient Search */}
+        <div className="flex items-center gap-2 flex-1 max-w-md">
+          <button
+            type="button"
+            onClick={toggleMobile}
+            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors md:hidden shrink-0 cursor-pointer"
+            title="Buka Menu SIMRS"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"

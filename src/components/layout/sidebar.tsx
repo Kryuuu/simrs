@@ -27,11 +27,13 @@ import {
   ChevronRight,
   Activity,
   UserPlus,
+  X,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { canAccessModule } from "@/lib/permissions/rbac";
 import { ModuleKey } from "@/types";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "./sidebar-context";
 
 interface NavGroup {
   label: string;
@@ -48,6 +50,7 @@ interface NavGroup {
 export function Sidebar() {
   const pathname = usePathname();
   const { currentUser, hospitalSettings, queues, prescriptions, labOrders, emergencyEncounters } = useSIMRS();
+  const { mobileOpen, closeMobile } = useSidebar();
   const [collapsed, setCollapsed] = useState(false);
 
   // Dynamic badge counts
@@ -213,114 +216,148 @@ export function Sidebar() {
   ];
 
   return (
-    <aside
-      className={cn(
-        "h-screen sticky top-0 flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800 transition-all duration-300 z-30 select-none",
-        collapsed ? "w-16" : "w-64"
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={closeMobile}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
+        />
       )}
-    >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 bg-slate-950/60">
-        {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center text-white shrink-0 shadow-md">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div className="truncate">
-              <h1 className="text-sm font-bold text-white tracking-tight truncate">
-                {hospitalSettings.hospital_name}
-              </h1>
-              <p className="text-[10px] text-teal-400 font-mono tracking-wider">
-                SIMRS ENTERPRISE
-              </p>
-            </div>
-          </Link>
+
+      <aside
+        className={cn(
+          "h-screen flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800 transition-all duration-300 select-none",
+          // Desktop positioning
+          "hidden md:flex md:sticky md:top-0 md:z-30",
+          collapsed ? "md:w-16" : "md:w-64",
+          // Mobile Drawer positioning
+          mobileOpen &&
+            "flex fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] shadow-2xl animate-in slide-in-from-left duration-200"
         )}
-        {collapsed && (
-          <Link href="/dashboard" className="mx-auto">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center text-white shadow-md">
-              <Activity className="h-5 w-5" />
-            </div>
-          </Link>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 hidden md:block"
-          title={collapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
-      </div>
+      >
+        {/* Brand Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 bg-slate-950/60">
+          {!collapsed && (
+            <Link
+              href="/dashboard"
+              onClick={closeMobile}
+              className="flex items-center gap-2.5 overflow-hidden"
+            >
+              <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div className="truncate">
+                <h1 className="text-sm font-bold text-white tracking-tight truncate">
+                  {hospitalSettings.hospital_name}
+                </h1>
+                <p className="text-[10px] text-teal-400 font-mono tracking-wider">
+                  SIMRS ENTERPRISE
+                </p>
+              </div>
+            </Link>
+          )}
+          {collapsed && (
+            <Link href="/dashboard" onClick={closeMobile} className="mx-auto">
+              <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center text-white shadow-md">
+                <Activity className="h-5 w-5" />
+              </div>
+            </Link>
+          )}
 
-      {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
-        {navGroups.map((group) => {
-          // Filter items based on user role permissions
-          const accessibleItems = group.items.filter((item) =>
-            canAccessModule(currentUser.role, item.moduleKey)
-          );
+          <div className="flex items-center gap-1">
+            {/* Desktop Collapse Toggle */}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 hidden md:block cursor-pointer"
+              title={collapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
 
-          if (accessibleItems.length === 0) return null;
-
-          return (
-            <div key={group.label} className="space-y-1">
-              {!collapsed && (
-                <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  {group.label}
-                </div>
-              )}
-              {accessibleItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-all group relative",
-                      isActive
-                        ? "bg-teal-600/20 text-teal-300 font-semibold border-l-2 border-teal-500"
-                        : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 shrink-0 transition-colors",
-                        isActive ? "text-teal-400" : "text-slate-400 group-hover:text-slate-300"
-                      )}
-                    />
-                    {!collapsed && <span className="truncate flex-1">{item.label}</span>}
-                    {!collapsed && item.badgeCount !== undefined && (
-                      <span
-                        className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-semibold shrink-0",
-                          item.badgeVariant === "alert"
-                            ? "bg-red-500 text-white animate-pulse"
-                            : item.badgeVariant === "warning"
-                            ? "bg-amber-500 text-slate-950 font-bold"
-                            : "bg-slate-700 text-slate-300"
-                        )}
-                      >
-                        {item.badgeCount}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Hospital Footer */}
-      {!collapsed && (
-        <div className="p-3 border-t border-slate-800 bg-slate-950/40 text-[11px] text-slate-500 flex items-center justify-between">
-          <span className="truncate">Zona: {hospitalSettings.timezone}</span>
-          <span className="h-2 w-2 rounded-full bg-emerald-500" title="Sistem Aktif" />
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={closeMobile}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden cursor-pointer"
+              title="Tutup Menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      )}
-    </aside>
+
+        {/* Navigation Groups */}
+        <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
+          {navGroups.map((group) => {
+            // Filter items based on user role permissions
+            const accessibleItems = group.items.filter((item) =>
+              canAccessModule(currentUser.role, item.moduleKey)
+            );
+
+            if (accessibleItems.length === 0) return null;
+
+            return (
+              <div key={group.label} className="space-y-1">
+                {!collapsed && (
+                  <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    {group.label}
+                  </div>
+                )}
+                {accessibleItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={closeMobile}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-all group relative",
+                        isActive
+                          ? "bg-teal-600/20 text-teal-300 font-semibold border-l-2 border-teal-500"
+                          : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
+                      )}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-colors",
+                          isActive ? "text-teal-400" : "text-slate-400 group-hover:text-slate-300"
+                        )}
+                      />
+                      {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+                      {!collapsed && item.badgeCount !== undefined && (
+                        <span
+                          className={cn(
+                            "px-1.5 py-0.2 rounded-full text-[10px] font-semibold shrink-0",
+                            item.badgeVariant === "alert"
+                              ? "bg-red-500 text-white animate-pulse"
+                              : item.badgeVariant === "warning"
+                              ? "bg-amber-500 text-slate-950 font-bold"
+                              : "bg-slate-700 text-slate-300"
+                          )}
+                        >
+                          {item.badgeCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Hospital Footer */}
+        {!collapsed && (
+          <div className="p-3 border-t border-slate-800 bg-slate-950/40 text-[11px] text-slate-500 flex items-center justify-between">
+            <span className="truncate">Zona: {hospitalSettings.timezone}</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500" title="Sistem Aktif" />
+          </div>
+        )}
+      </aside>
+    </>
   );
 }
