@@ -14,6 +14,8 @@ import {
   Stethoscope,
   Siren,
   Search,
+  ShieldCheck,
+  User,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { QUEUE_STATUS_INFO, formatTime, formatDate } from "@/lib/formatters";
@@ -22,6 +24,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { cn } from "@/lib/utils";
 
 export default function RegistrationsPage() {
   const {
@@ -437,31 +440,129 @@ export default function RegistrationsPage() {
                 </div>
               )}
 
-              {/* Insurance & Payment Type */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1.5">Penjamin Kunjungan *</label>
-                  <select
-                    value={insuranceType}
-                    onChange={(e) => setInsuranceType(e.target.value as any)}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-xs"
-                  >
-                    <option value="BPJS_KESEHATAN">BPJS Kesehatan (JKN)</option>
-                    <option value="UMUM">Pasien Umum (Biaya Sendiri)</option>
-                    <option value="ASURANSI_SWASTA">Asuransi Perusahaan / Swasta</option>
-                  </select>
+              {/* Patient Category / Insurance & Payment Type */}
+              <div className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-800 block text-xs">
+                    Pilihan Kategori Pasien: BPJS Kesehatan (JKN) atau Pasien Umum? *
+                  </label>
+                  <span className="text-[10px] text-emerald-700 bg-emerald-100 font-mono px-2 py-0.5 rounded font-bold">
+                    BRIDGING vCLAIM
+                  </span>
                 </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1.5">
-                    Nomor Rujukan / Nomor Polis
-                  </label>
-                  <Input
-                    placeholder="Nomor rujukan faskes tingkat 1"
-                    value={insuranceNumber}
-                    onChange={(e) => setInsuranceNumber(e.target.value)}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Option 1: BPJS Kesehatan */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInsuranceType("BPJS_KESEHATAN");
+                      const p = patients.find((item) => item.id === selectedPatientId);
+                      if (p && p.insurance_number) {
+                        setInsuranceNumber(p.insurance_number);
+                      }
+                    }}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer relative",
+                      insuranceType === "BPJS_KESEHATAN"
+                        ? "border-emerald-500 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-xs"
+                        : "border-slate-200 bg-white hover:bg-slate-100/70"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                        <span>Pasien BPJS (JKN)</span>
+                      </div>
+                      {insuranceType === "BPJS_KESEHATAN" && (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Penerbitan SEP & penjaminan tarif INA-CBGs BPJS.
+                    </p>
+                  </button>
+
+                  {/* Option 2: Pasien Umum */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInsuranceType("UMUM");
+                      setInsuranceNumber("");
+                    }}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer relative",
+                      insuranceType === "UMUM"
+                        ? "border-teal-500 bg-teal-50/80 ring-2 ring-teal-500/20 shadow-xs"
+                        : "border-slate-200 bg-white hover:bg-slate-100/70"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-teal-600" />
+                        <span>Pasien Umum</span>
+                      </div>
+                      {insuranceType === "UMUM" && (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Biaya mandiri / bayar langsung di kasir SIMRS.
+                    </p>
+                  </button>
+
+                  {/* Option 3: Asuransi Swasta */}
+                  <button
+                    type="button"
+                    onClick={() => setInsuranceType("ASURANSI_SWASTA")}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer relative",
+                      insuranceType === "ASURANSI_SWASTA"
+                        ? "border-purple-500 bg-purple-50/80 ring-2 ring-purple-500/20 shadow-xs"
+                        : "border-slate-200 bg-white hover:bg-slate-100/70"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <span className="h-4 w-4 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold">AS</span>
+                        <span>Asuransi Swasta</span>
+                      </div>
+                      {insuranceType === "ASURANSI_SWASTA" && (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-purple-600" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Klaim cashless asuransi swasta/perusahaan.
+                    </p>
+                  </button>
                 </div>
+
+                {/* Nomor Polis / Kartu BPJS Input */}
+                {insuranceType !== "UMUM" && (
+                  <div className="pt-2 border-t border-slate-200/80 space-y-2">
+                    <label className="font-semibold text-slate-700 block text-xs">
+                      {insuranceType === "BPJS_KESEHATAN" ? "Nomor Kartu / Polis BPJS (13 Digit)" : "Nomor Polis / Kartu Asuransi"}
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder={insuranceType === "BPJS_KESEHATAN" ? "Contoh: 0001892837461 (13 Digit)" : "Nomor polis asuransi"}
+                        value={insuranceNumber}
+                        onChange={(e) => setInsuranceNumber(e.target.value)}
+                        className="font-mono text-xs"
+                      />
+                    </div>
+                    {insuranceType === "BPJS_KESEHATAN" && (
+                      <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>
+                          {insuranceNumber
+                            ? `✓ Terverifikasi: No. Kartu ${insuranceNumber} terhubung ke server BPJS. Surat Eligibilitas Peserta (SEP) siap diterbitkan otomatis.`
+                            : "Masukkan nomor kartu/polis BPJS peserta atau pilih pasien BPJS untuk bridging otomatis."}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">

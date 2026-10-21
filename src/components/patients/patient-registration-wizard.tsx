@@ -20,11 +20,17 @@ import {
   Sparkles,
   FileCheck2,
   Share2,
+  Search,
+  RefreshCw,
+  Shield,
+  CheckCircle,
 } from "lucide-react";
 import { useSIMRS } from "@/lib/demo-store";
 import { Patient } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { lookupBPJSParticipant, BPJSParticipant, SAMPLE_BPJS_DATABASE } from "@/lib/bpjs-jkn";
+import { cn } from "@/lib/utils";
 
 interface PatientWizardProps {
   isPublicKiosk?: boolean;
@@ -73,12 +79,63 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
     allergies: [] as string[],
   });
 
+  // Patient Category Selection: "BPJS_KESEHATAN" vs "UMUM"
+  const [patientCategory, setPatientCategory] = useState<"BPJS_KESEHATAN" | "UMUM">("BPJS_KESEHATAN");
+  const [bpjsCardNumber, setBpjsCardNumber] = useState("0001892837461");
+  const [bpjsLookupLoading, setBpjsLookupLoading] = useState(false);
+  const [verifiedBPJS, setVerifiedBPJS] = useState<BPJSParticipant | null>(null);
+
+  const handleBPJSLookup = async (cardNumToLookup?: string) => {
+    const target = (cardNumToLookup || bpjsCardNumber).replace(/\D/g, "");
+    if (!target) {
+      alert("Silakan masukkan Nomor Kartu BPJS / Nomor Polis terlebih dahulu.");
+      return;
+    }
+    setBpjsLookupLoading(true);
+    try {
+      const data = await lookupBPJSParticipant(target);
+      setVerifiedBPJS(data);
+      // Auto-fill all fields from BPJS JKN policy
+      setFormData((prev) => ({
+        ...prev,
+        nik: data.nik,
+        full_name: data.nama,
+        gender: data.jenis_kelamin,
+        birth_place: data.tempat_lahir,
+        birth_date: data.tanggal_lahir,
+        blood_type: data.golongan_darah,
+        rhesus: data.rhesus,
+        address_street: data.alamat_jalan,
+        address_village: data.kelurahan,
+        address_district: data.kecamatan,
+        address_city: data.kota,
+        address_province: data.provinsi,
+        phone_number: data.nomor_telepon,
+        emergency_contact_name: data.nama_kontak_darurat,
+        emergency_contact_relation: data.hubungan_darurat,
+        emergency_contact_phone: data.telepon_darurat,
+        insurance_type: "BPJS_KESEHATAN",
+        insurance_number: data.nomor_kartu,
+        allergies: data.alergi && data.alergi.length > 0 ? data.alergi : prev.allergies,
+      }));
+      setErrors({});
+    } catch (err: any) {
+      alert("Gagal menarik data dari server BPJS: " + err.message);
+    } finally {
+      setBpjsLookupLoading(false);
+    }
+  };
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateStep = (step: number): boolean => {
     const err: Record<string, string> = {};
 
     if (step === 1) {
+      if (patientCategory === "BPJS_KESEHATAN" && !verifiedBPJS && !bpjsCardNumber.trim()) {
+        err.bpjs = "Nomor kartu/polis BPJS wajib diisi (13 digit).";
+      }
+
       if (!formData.nik.trim()) {
         err.nik = "NIK Wajib diisi";
       } else if (!/^\d{16}$/.test(formData.nik.trim())) {
@@ -129,7 +186,20 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
     return Object.keys(err).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (currentStep === 1 && patientCategory === "BPJS_KESEHATAN" && !verifiedBPJS) {
+      const num = bpjsCardNumber.replace(/\D/g, "");
+      if (num.length >= 10) {
+        await handleBPJSLookup(num);
+        setCurrentStep(2);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      } else {
+        setErrors({ bpjs: "Masukkan 13 digit nomor polis / kartu BPJS Anda" });
+        return;
+      }
+    }
+
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, 5));
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -315,14 +385,233 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
       {/* ============================================================ */}
       {currentStep === 1 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+          {/* Patient Category Selector: BPJS JKN vs Pasien Umum */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 block">
+                  Kategori Pasien & Penjamin
+                </span>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Pilih Jenis Pasien: BPJS Kesehatan (JKN) atau Pasien Umum?
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-full border border-emerald-300 font-semibold self-start sm:self-auto">
+                ✓ Bridging BPJS Terintegrasi
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Opsi 1: BPJS Kesehatan JKN */}
+              <button
+                type="button"
+                onClick={() => {
+                  setPatientCategory("BPJS_KESEHATAN");
+                  setFormData((prev) => ({ ...prev, insurance_type: "BPJS_KESEHATAN" }));
+                }}
+                className={cn(
+                  "p-4 rounded-xl border text-left transition-all cursor-pointer relative",
+                  patientCategory === "BPJS_KESEHATAN"
+                    ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-xs"
+                    : "border-slate-200 bg-white hover:bg-slate-100/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    <span>Pasien BPJS Kesehatan (JKN / KIS)</span>
+                  </div>
+                  {patientCategory === "BPJS_KESEHATAN" && (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Hanya memasukkan nomor kartu/polis BPJS. Seluruh data identitas, TTL & alamat otomatis ditarik dari BPJS.
+                </p>
+              </button>
+
+              {/* Opsi 2: Pasien Umum */}
+              <button
+                type="button"
+                onClick={() => {
+                  setPatientCategory("UMUM");
+                  setVerifiedBPJS(null);
+                  setFormData((prev) => ({ ...prev, insurance_type: "UMUM", insurance_number: "" }));
+                }}
+                className={cn(
+                  "p-4 rounded-xl border text-left transition-all cursor-pointer relative",
+                  patientCategory === "UMUM"
+                    ? "border-teal-500 bg-teal-50/70 ring-2 ring-teal-500/20 shadow-xs"
+                    : "border-slate-200 bg-white hover:bg-slate-100/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                    <User className="h-4 w-4 text-teal-600" />
+                    <span>Pasien Umum / Mandiri (Non-BPJS)</span>
+                  </div>
+                  {patientCategory === "UMUM" && (
+                    <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Pasien tanpa jaminan BPJS / bayar mandiri langsung di kasir SIMRS. Pengisian formulir secara manual.
+                </p>
+              </button>
+            </div>
+
+            {/* BPJS Polis Lookup Box if BPJS Selected */}
+            {patientCategory === "BPJS_KESEHATAN" && (
+              <div className="p-4 rounded-xl bg-linear-to-br from-emerald-50 to-teal-50/50 border border-emerald-300 shadow-xs space-y-3 pt-3 mt-2 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <ShieldCheck className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Masukkan Nomor Polis / Kartu BPJS (13 Digit)
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Sistem akan otomatis mencocokkan data kepesertaan vClaim & mengisi seluruh kolom.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-bold hidden sm:inline">
+                    AUTO-FILL ON
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      maxLength={13}
+                      value={bpjsCardNumber}
+                      onChange={(e) => {
+                        setBpjsCardNumber(e.target.value.replace(/\D/g, ""));
+                        if (errors.bpjs) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.bpjs;
+                            return next;
+                          });
+                        }
+                      }}
+                      placeholder="Contoh: 0001892837461 (13 Digit)"
+                      className="font-mono text-sm tracking-widest bg-white border-emerald-300 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => handleBPJSLookup()}
+                    disabled={bpjsLookupLoading || !bpjsCardNumber.trim()}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 text-xs shadow-md shadow-emerald-700/20 shrink-0"
+                  >
+                    {bpjsLookupLoading ? (
+                      <span>Menarik Data BPJS...</span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Search className="h-3.5 w-3.5" />
+                        Tarik Data Peserta JKN
+                      </span>
+                    )}
+                  </Button>
+                </div>
+                {errors.bpjs && (
+                  <p className="text-[11px] text-red-600 font-semibold">{errors.bpjs}</p>
+                )}
+
+                {/* Quick Sample Numbers for Easy Testing */}
+                <div className="pt-1">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                    Atau Klik Contoh Nomor Kartu BPJS Uji Coba:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(SAMPLE_BPJS_DATABASE).map(([cardNum, p]) => (
+                      <button
+                        key={cardNum}
+                        type="button"
+                        onClick={() => {
+                          setBpjsCardNumber(cardNum);
+                          handleBPJSLookup(cardNum);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-white border border-emerald-200 hover:border-emerald-400 text-slate-700 text-[11px] font-medium transition-all hover:bg-emerald-50 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <span className="font-mono font-bold text-emerald-700">{cardNum}</span>
+                        <span className="text-slate-500">({p.nama.split(" ")[0]} - {p.jenis_peserta.split(" ")[0]})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Verified Participant Card */}
+                {verifiedBPJS && (
+                  <div className="p-4 rounded-xl bg-white border border-emerald-300 shadow-xs space-y-3 mt-3 animate-scale-in">
+                    <div className="flex items-center justify-between pb-2 border-b border-emerald-100">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="font-bold text-xs text-emerald-900">
+                          Data Peserta JKN Berhasil Disinkronkan
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                        STATUS: {verifiedBPJS.status_peserta}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Nama Peserta:</span>
+                        <span className="font-bold text-slate-900">{verifiedBPJS.nama}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">NIK Terdaftar:</span>
+                        <span className="font-mono text-slate-800">{verifiedBPJS.nik}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Faskes 1 (Rujukan):</span>
+                        <span className="text-slate-800 font-medium truncate block">{verifiedBPJS.faskes_1}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Hak Kelas Rawat:</span>
+                        <span className="font-bold text-emerald-700">{verifiedBPJS.kelas_rawat}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t border-emerald-100">
+                      <span className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium">
+                        ✓ Seluruh kolom identitas & domisili di bawah ini telah terisi otomatis.
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(5);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs self-start sm:self-auto"
+                      >
+                        Langsung ke Tinjauan & Terbitkan No. RM →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
             <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
               <User className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">1. Data Identitas Kependudukan (Sesuai KTP / KK)</h2>
+              <h2 className="text-lg font-bold text-slate-900">
+                1. Data Identitas Kependudukan (Sesuai KTP / KK)
+              </h2>
               <p className="text-xs text-slate-500">
-                Data NIK divalidasi dan dijamin kerahasiaannya sesuai UU Perlindungan Data Pribadi (UU PDP).
+                {patientCategory === "BPJS_KESEHATAN" && verifiedBPJS
+                  ? "Data otomatis terisi dari server BPJS Kesehatan. Anda dapat memeriksa kembali sebelum disimpan."
+                  : "Data NIK divalidasi dan dijamin kerahasiaannya sesuai UU Perlindungan Data Pribadi (UU PDP)."}
               </p>
             </div>
           </div>
@@ -721,9 +1010,24 @@ export function PatientRegistrationWizard({ isPublicKiosk = false }: PatientWiza
                   <p className="text-[11px] text-red-600 font-medium">{errors.insurance_number}</p>
                 )}
                 {formData.insurance_type === "BPJS_KESEHATAN" && (
-                  <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-100/60 px-2.5 py-1 rounded-md mt-1">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Sistem SIMRS siap bridging vClaim BPJS Kesehatan secara otomatis saat penerbitan SEP.
+                  <div className="space-y-1.5 mt-2">
+                    {verifiedBPJS && (
+                      <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <span>
+                            Peserta JKN Terverifikasi: <strong>{verifiedBPJS.nama}</strong> ({verifiedBPJS.kelas_rawat}) • Faskes: {verifiedBPJS.faskes_1}
+                          </span>
+                        </div>
+                        <span className="font-bold text-[10px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          {verifiedBPJS.status_peserta}
+                        </span>
+                      </div>
+                    )}
+                    <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-100/60 px-2.5 py-1 rounded-md">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Sistem SIMRS siap bridging vClaim BPJS Kesehatan secara otomatis saat penerbitan SEP.
+                    </div>
                   </div>
                 )}
               </div>
